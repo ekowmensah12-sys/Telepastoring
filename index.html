@@ -472,6 +472,19 @@ tbody tr.overdue td:first-child{border-left:3px solid var(--red-alert);padding-l
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="width:420px;max-width:95vw;">
+    <h3>✏️ Edit Contact</h3>
+    <p id="edit-modal-desc" style="margin-bottom:10px;"></p>
+    <div id="edit-modal-fields"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══ STATE ═══
 let state = {
@@ -627,10 +640,10 @@ function modeBadge(mode) {
 }
 function catBadge(cat) {
   const map = {
-    'sheep':['badge-l1','L1'],
-    'friend':['badge-l2','L2'],
-    'church-core':['badge-l3','L3'],
-    'church-leader':['badge-l4','L4']
+    'sheep':['badge-l1','Level 1'],
+    'friend':['badge-l2','Level 2'],
+    'church-core':['badge-l3','Level 3'],
+    'church-leader':['badge-l4','Level 4']
   };
   if (!cat || !map[cat]) return '';
   return `<span class="badge ${map[cat][0]}">${map[cat][1]}</span>`;
@@ -709,6 +722,7 @@ function renderTable(tab) {
         <td>${dateDisp}</td>
         <td class="hide-m">${modeBadge(c.mode)}</td>
         <td>
+          <button class="action-btn" title="Edit" onclick="openEditModal('flock','${c.id}')">✏️</button>
           <button class="action-btn" onclick="openPanel('flock','${c.id}')">Notes</button>
           <button class="action-btn danger" onclick="deleteContact('flock','${c.id}')">Delete</button>
         </td></tr>`;
@@ -720,6 +734,7 @@ function renderTable(tab) {
         <td>${dateDisp}</td>
         <td class="hide-m">${modeBadge(c.mode)}</td>
         <td>
+          <button class="action-btn" title="Edit" onclick="openEditModal('${tab}','${c.id}')">✏️</button>
           <button class="action-btn" onclick="openPanel('${tab}','${c.id}')">Notes</button>
           <button class="action-btn danger" onclick="deleteContact('${tab}','${c.id}')">Delete</button>
         </td></tr>`;
@@ -810,6 +825,90 @@ function closePanel() {
   document.getElementById('panel-overlay').classList.remove('open');
   document.getElementById('side-panel').classList.remove('open');
   currentPanel=null;
+}
+
+// ═══ EDIT MODAL ═══
+let editTarget = null;
+function openEditModal(tab, id) {
+  const c = state[tab].find(x=>x.id===id); if (!c) return;
+  editTarget = {tab, id};
+  document.getElementById('edit-modal-desc').textContent = 'Editing: ' + displayName(c);
+  let fields = '';
+  if (tab==='flock') {
+    fields += `<label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Full Name</label>
+      <input id="edit-name" value="${c.name||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Category Level</label>
+      <select id="edit-cat" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+        <option value="">Select…</option>
+        <option value="sheep" ${c.cat==='sheep'?'selected':''}>Level 1</option>
+        <option value="friend" ${c.cat==='friend'?'selected':''}>Level 2</option>
+        <option value="church-core" ${c.cat==='church-core'?'selected':''}>Level 3</option>
+        <option value="church-leader" ${c.cat==='church-leader'?'selected':''}>Level 4</option>
+      </select>
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Church</label>
+      <select id="edit-church" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+        ${state.churchCats.map(ch=>`<option value="${ch}" ${c.church===ch?'selected':''}>${ch}</option>`).join('')}
+      </select>
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Last Contact</label>
+      <input type="date" id="edit-lastdate" value="${c.lastDate||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Communication Type</label>
+      <select id="edit-mode" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+        <option value="">Select…</option>
+        <option value="Text" ${c.mode==='Text'?'selected':''}>Text</option>
+        <option value="Call" ${c.mode==='Call'?'selected':''}>Call</option>
+        <option value="F2F" ${c.mode==='F2F'?'selected':''}>F2F</option>
+      </select>`;
+  } else {
+    const titleOpts = tab==='gal'
+      ? ['Bishop','Mother','Reverend','Pastor','Lady Pastor','Archbishop','Apostle']
+      : ['Bishop','Mother','Reverend','Pastor','Lady Pastor'];
+    fields += `<label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Title</label>
+      <select id="edit-title" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+        <option value="">Select…</option>
+        ${titleOpts.map(t=>`<option value="${t}" ${c.title===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Full Name</label>
+      <input id="edit-name" value="${c.name||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Denomination</label>
+      <input id="edit-denom" value="${c.denom||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Church</label>
+      <input id="edit-church-text" value="${c.church||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Last Contact</label>
+      <input type="date" id="edit-lastdate" value="${c.lastDate||''}" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+      <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:3px;">Communication Type</label>
+      <select id="edit-mode" style="width:100%;padding:8px;border:1px solid var(--cream-border);border-radius:6px;font-family:DM Sans,sans-serif;font-size:13px;margin-bottom:10px;">
+        <option value="">Select…</option>
+        <option value="Text" ${c.mode==='Text'?'selected':''}>Text</option>
+        <option value="Call" ${c.mode==='Call'?'selected':''}>Call</option>
+        <option value="F2F" ${c.mode==='F2F'?'selected':''}>F2F</option>
+      </select>`;
+  }
+  document.getElementById('edit-modal-fields').innerHTML = fields;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editTarget = null;
+}
+function saveEdit() {
+  if (!editTarget) return;
+  const {tab, id} = editTarget;
+  const c = state[tab].find(x=>x.id===id); if (!c) return;
+  c.name = document.getElementById('edit-name').value.trim() || c.name;
+  const editedDate = document.getElementById('edit-lastdate').value;
+  if (editedDate) c.lastDate = editedDate;
+  const editedMode = document.getElementById('edit-mode').value;
+  if (editedMode) c.mode = editedMode;
+  if (tab==='flock') {
+    c.cat = document.getElementById('edit-cat').value;
+    c.church = document.getElementById('edit-church').value;
+  } else {
+    c.title = document.getElementById('edit-title').value;
+    c.denom = document.getElementById('edit-denom').value.trim();
+    c.church = document.getElementById('edit-church-text').value.trim();
+  }
+  save(); renderTable(tab); renderAlerts(tab);
+  closeEditModal();
 }
 
 // ═══ INIT ═══
