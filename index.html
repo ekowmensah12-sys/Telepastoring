@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telepastoring CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#F8F5EE; --cream-dark:#EDE8DC; --cream-border:#D9D2C2;
+  --blue-primary:#0176D3; --blue-dark:#014486; --blue-light:#D0E8FA; --blue-mid:#5BA4CF;
+  --text-dark:#1B2533; --text-mid:#4A5568; --text-light:#7A8899;
+  --red-alert:#C23934; --red-light:#FDEDEC; --white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;}
+
+/* HEADER */
+.app-header{background:var(--blue-dark);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:68px;position:sticky;top:0;z-index:100;}
+.brand{font-family:'Lora',serif;color:var(--white);font-weight:600;letter-spacing:0.01em;display:flex;flex-direction:column;line-height:1.2;}
+.brand-title{font-size:20px;}
+.brand-verse{font-size:11px;color:var(--blue-mid);font-weight:400;font-style:italic;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:16px;}
+.header-date{color:var(--white);font-size:15px;font-weight:600;white-space:nowrap;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:6px 14px;letter-spacing:0.01em;}
+.header-actions{display:flex;gap:8px;}
+.btn-icon{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);color:white;padding:6px 14px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.15s;}
+.btn-icon:hover{background:rgba(255,255,255,0.22);}
+
+/* TABS */
+.tab-bar{background:var(--blue-dark);padding:0 2rem;display:flex;gap:2px;border-bottom:3px solid var(--blue-primary);}
+.tab-btn{background:rgba(255,255,255,0.05);border:none;border-radius:8px 8px 0 0;color:rgba(255,255,255,0.6);padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-3px;transition:all 0.18s;white-space:nowrap;}
+.tab-btn:hover{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.9);}
+.tab-btn.active{background:rgba(255,255,255,0.14);color:white;border-bottom-color:#5BA4CF;font-weight:600;}
+.tab-subtitle{font-size:11px;opacity:0.65;display:block;font-weight:300;margin-top:2px;}
+
+/* CONTENT */
+.tab-content{display:none;padding:1.5rem 2rem;}
+.tab-content.active{display:block;}
+
+/* ALERT BANNER */
+.alert-banner{background:var(--red-light);border:1px solid #F5B7B1;border-left:4px solid var(--red-alert);border-radius:6px;padding:12px 16px;margin-bottom:1.5rem;display:none;}
+.alert-banner.visible{display:block;}
+.alert-banner h4{font-size:13px;font-weight:600;color:var(--red-alert);margin-bottom:6px;}
+.alert-list{list-style:none;display:flex;flex-wrap:wrap;gap:6px;}
+.alert-list li{background:white;border:1px solid #F5B7B1;border-radius:4px;padding:3px 10px;font-size:12px;color:var(--red-alert);}
+
+/* FORM CARD */
+.form-card{background:white;border:1px solid var(--cream-border);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;}
+.form-card h3{font-size:14px;font-weight:600;color:var(--blue-dark);margin-bottom:1rem;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;align-items:end;}
+.form-group{display:flex;flex-direction:column;}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;text-align:center;}
+.form-group input,.form-group select{width:100%;padding:8px 10px;border:1px solid var(--cream-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);background:var(--cream);transition:border 0.15s;text-align:center;}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--blue-primary);background:white;}
+.btn-add{background:var(--blue-primary);color:white;border:none;padding:9px 20px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;height:36px;align-self:end;width:100%;}
+.btn-add:hover{background:var(--blue-dark);}
+
+/* Level badges for category */
+.level-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.level-btn{background:var(--cream);border:1.5px solid var(--cream-border);border-radius:6px;padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;color:var(--text-mid);transition:all 0.15s;}
+.level-btn:hover{border-color:var(--blue-primary);color:var(--blue-primary);}
+.level-btn.selected{background:var(--blue-primary);border-color:var(--blue-primary);color:white;}
+
+/* Church manager inline */
+.church-mgr{display:flex;flex-direction:column;gap:6px;}
+.church-mgr-row{display:flex;gap:4px;align-items:center;}
+.church-mgr-row select{flex:1;padding:8px 10px;border:1px solid var(--cream-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--cream);text-align:center;}
+.church-mgr-row select:focus{outline:none;border-color:var(--blue-primary);background:white;}
+.btn-sm{background:var(--cream-dark);border:1px solid var(--cream-border);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text-mid);white-space:nowrap;transition:all 0.15s;}
+.btn-sm:hover{border-color:var(--blue-primary);color:var(--blue-primary);}
+.btn-sm.danger:hover{border-color:var(--red-alert);color:var(--red-alert);}
+
+/* TABLE */
+.table-wrap{background:white;border:1px solid var(--cream-border);border-radius:10px;overflow:hidden;}
+.table-header-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--cream-border);}
+.table-header-row h3{font-size:13px;font-weight:600;color:var(--text-mid);}
+.search-box{padding:6px 12px;border:1px solid var(--cream-border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;width:180px;background:var(--cream);}
+.search-box:focus{outline:none;border-color:var(--blue-primary);background:white;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead{background:var(--cream);border-bottom:1px solid var(--cream-border);}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--blue-primary);}
+th .sort-arrow{margin-left:4px;opacity:0.4;font-size:10px;}
+th.sorted .sort-arrow{opacity:1;color:var(--blue-primary);}
+td{padding:11px 14px;border-bottom:1px solid var(--cream-border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FAFAF7;}
+tbody tr.overdue{background:#FFF9F9;}
+tbody tr.overdue td:first-child{border-left:3px solid var(--red-alert);padding-left:11px;}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.badge-l1{background:#E3F2FD;color:#1565C0;}
+.badge-l2{background:#EDE7F6;color:#4527A0;}
+.badge-l3{background:#E8F5E9;color:#1B5E20;}
+.badge-l4{background:#FFF8E1;color:#6D4C00;}
+.badge-text{background:#F3F4F6;color:#374151;}
+.badge-call{background:#E8F5E9;color:#1B5E20;}
+.badge-f2f{background:#FFF3E0;color:#7B3F00;}
+.overdue-pill{display:inline-block;background:var(--red-light);color:var(--red-alert);border:1px solid #F5B7B1;border-radius:10px;font-size:10px;padding:1px 7px;margin-left:6px;font-weight:600;}
+
+/* ACTION BUTTONS */
+.action-btn{background:transparent;border:1px solid var(--cream-border);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text-mid);transition:all 0.15s;margin-right:4px;}
+.action-btn:hover{border-color:var(--blue-primary);color:var(--blue-primary);}
+.action-btn.danger:hover{border-color:var(--red-alert);color:var(--red-alert);}
+
+/* SIDE PANEL */
+.panel-overlay{display:none;position:fixed;inset:0;background:rgba(20,30,48,0.35);z-index:200;}
+.panel-overlay.open{display:block;}
+.side-panel{position:fixed;top:0;right:0;bottom:0;width:400px;background:white;z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.25s ease;box-shadow:-4px 0 24px rgba(0,0,0,0.1);}
+.side-panel.open{transform:translateX(0);}
+.panel-header{background:var(--blue-dark);padding:16px 20px;color:white;display:flex;align-items:flex-start;justify-content:space-between;}
+.panel-header h3{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:3px;}
+.panel-header .sub{font-size:12px;opacity:0.7;}
+.panel-close{background:rgba(255,255,255,0.15);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.panel-close:hover{background:rgba(255,255,255,0.25);}
+.panel-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.panel-meta{background:var(--cream);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;}
+.panel-meta .row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text-mid);}
+.panel-meta .row span:first-child{color:var(--text-light);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.panel-update-section{background:var(--cream);border-radius:8px;padding:14px;margin-bottom:16px;}
+.panel-update-section h4{font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;}
+.panel-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.panel-form-row label{font-size:11px;color:var(--text-light);display:block;margin-bottom:4px;}
+.panel-update-section input,.panel-update-section select,.panel-update-section textarea{width:100%;padding:7px 10px;border:1px solid var(--cream-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;background:white;}
+.panel-update-section textarea{resize:vertical;min-height:70px;margin-bottom:8px;}
+.btn-save{background:var(--blue-primary);color:white;border:none;padding:8px 16px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background 0.15s;}
+.btn-save:hover{background:var(--blue-dark);}
+.notes-section h4{font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;}
+.note-item{border-left:2px solid var(--blue-mid);padding:6px 12px;margin-bottom:10px;background:#F8FBFF;border-radius:0 6px 6px 0;}
+.note-item .note-date{font-size:10px;color:var(--text-light);margin-bottom:3px;font-weight:600;}
+.note-item .note-text{font-size:13px;color:var(--text-dark);line-height:1.5;}
+.note-item .note-mode{font-size:10px;margin-top:4px;}
+.no-notes{font-size:13px;color:var(--text-light);font-style:italic;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,30,48,0.4);z-index:300;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:10px;padding:24px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--blue-dark);}
+.modal p{font-size:13px;color:var(--text-mid);margin-bottom:14px;}
+.modal input,.modal select{width:100%;padding:9px 12px;border:1px solid var(--cream-border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+.btn-cancel{background:var(--cream);border:1px solid var(--cream-border);padding:8px 16px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:40px;color:var(--text-light);}
+.empty-state p{font-size:14px;margin-top:8px;}
+
+@media(max-width:700px){
+  .app-header,.tab-bar{padding:0 1rem;}
+  .tab-content{padding:1rem;}
+  .side-panel{width:100%;}
+  .form-grid{grid-template-columns:1fr 1fr;}
+  th.hide-m,td.hide-m{display:none;}
+  .header-date{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand"><span class="brand-title">Telepastoring CRM</span><span class="brand-verse">Proverbs 27:23</span></div>
+  <div class="header-right">
+    <div class="header-date" id="header-date"></div>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="exportData()">⬇ Export</button>
+      <label class="btn-icon" style="cursor:pointer;">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('flock',this)">
+    Flock
+    <span class="tab-subtitle">Pro 27:23</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('isi',this)">
+    ISI
+    <span class="tab-subtitle">Pro 27:17</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('gal',this)">
+    Bishop Comms
+    <span class="tab-subtitle">Gal 6:6</span>
+  </button>
+</nav>
+
+<!-- ═══ TAB 1: FLOCK ═══ -->
+<section id="tab-flock" class="tab-content active">
+  <div id="alert-flock" class="alert-banner">
+    <h4>⚠ Overdue — no contact in over 7 days</h4>
+    <ul class="alert-list" id="alert-list-flock"></ul>
+  </div>
+
+  <div class="form-card">
+    <h3>+ Add Contact</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="flock-name" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label>Category Level</label>
+        <select id="flock-cat" onchange="flockSelectedLevel=this.value">
+          <option value="">Select…</option>
+          <option value="sheep">L1</option>
+          <option value="friend">L2</option>
+          <option value="church-core">L3</option>
+          <option value="church-leader">L4</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Church</label>
+        <div class="church-mgr">
+          <div class="church-mgr-row">
+            <select id="flock-church"></select>
+            <button class="btn-sm" onclick="openChurchModal()">+ Add</button>
+            <button class="btn-sm danger" onclick="removeChurch()">– Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Last Contact</label>
+        <input type="date" id="flock-date">
+      </div>
+      <div class="form-group">
+        <label>Communication Type</label>
+        <select id="flock-mode">
+          <option value="">Select…</option>
+          <option value="Text">Text</option>
+          <option value="Call">Call</option>
+          <option value="F2F">F2F</option>
+        </select>
+      </div>
+      <div style="align-self:end;">
+        <button class="btn-add" onclick="addContact('flock')">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header-row">
+      <h3 id="flock-count">0 Contacts</h3>
+      <input class="search-box" type="text" placeholder="Search…" oninput="filterTable('flock',this.value)">
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('flock','name')">Name <span class="sort-arrow">⇅</span></th>
+            <th onclick="sortTable('flock','cat')">Category <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m" onclick="sortTable('flock','church')">Church <span class="sort-arrow">⇅</span></th>
+            <th onclick="sortTable('flock','lastDate')">Last Contact <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m">Comm. Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-flock">
+          <tr><td colspan="6"><div class="empty-state"><p>No contacts yet. Add your first above.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TAB 2: ISI ═══ -->
+<section id="tab-isi" class="tab-content">
+  <div id="alert-isi" class="alert-banner">
+    <h4>⚠ Overdue — no contact in over 7 days</h4>
+    <ul class="alert-list" id="alert-list-isi"></ul>
+  </div>
+
+  <div class="form-card">
+    <h3>+ Add Pastor Contact</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title</label>
+        <select id="isi-title">
+          <option value="">Select…</option>
+          <option>Bishop</option>
+          <option>Mother</option>
+          <option>Reverend</option>
+          <option>Pastor</option>
+          <option>Lady Pastor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="isi-name" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label>Denomination</label>
+        <input type="text" id="isi-denom" placeholder="Enter denomination">
+      </div>
+      <div class="form-group">
+        <label>Church</label>
+        <input type="text" id="isi-church" placeholder="Church name">
+      </div>
+      <div class="form-group">
+        <label>Last Contact</label>
+        <input type="date" id="isi-date">
+      </div>
+      <div class="form-group">
+        <label>Communication Type</label>
+        <select id="isi-mode">
+          <option value="">Select…</option>
+          <option value="Text">Text</option>
+          <option value="Call">Call</option>
+          <option value="F2F">F2F</option>
+        </select>
+      </div>
+      <div style="align-self:end;">
+        <button class="btn-add" onclick="addContact('isi')">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header-row">
+      <h3 id="isi-count">0 Contacts</h3>
+      <input class="search-box" type="text" placeholder="Search…" oninput="filterTable('isi',this.value)">
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('isi','name')">Name <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m" onclick="sortTable('isi','denom')">Denomination <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m" onclick="sortTable('isi','church')">Church <span class="sort-arrow">⇅</span></th>
+            <th onclick="sortTable('isi','lastDate')">Last Contact <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m">Comm. Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-isi">
+          <tr><td colspan="6"><div class="empty-state"><p>No pastor contacts yet.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TAB 3: GAL 6:6 ═══ -->
+<section id="tab-gal" class="tab-content">
+  <div id="alert-gal" class="alert-banner">
+    <h4>⚠ Overdue — no contact in over 7 days</h4>
+    <ul class="alert-list" id="alert-list-gal"></ul>
+  </div>
+
+  <div class="form-card">
+    <h3>+ Add Bishop Contact</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title</label>
+        <select id="gal-title">
+          <option value="">Select…</option>
+          <option>Bishop</option>
+          <option>Mother</option>
+          <option>Reverend</option>
+          <option>Pastor</option>
+          <option>Lady Pastor</option>
+          <option>Archbishop</option>
+          <option>Apostle</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="gal-name" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label>Denomination</label>
+        <input type="text" id="gal-denom" placeholder="Enter denomination">
+      </div>
+      <div class="form-group">
+        <label>Church</label>
+        <input type="text" id="gal-church" placeholder="Church name">
+      </div>
+      <div class="form-group">
+        <label>Last Contact</label>
+        <input type="date" id="gal-date">
+      </div>
+      <div class="form-group">
+        <label>Communication Type</label>
+        <select id="gal-mode">
+          <option value="">Select…</option>
+          <option value="Text">Text</option>
+          <option value="Call">Call</option>
+          <option value="F2F">F2F</option>
+        </select>
+      </div>
+      <div style="align-self:end;">
+        <button class="btn-add" onclick="addContact('gal')">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header-row">
+      <h3 id="gal-count">0 Contacts</h3>
+      <input class="search-box" type="text" placeholder="Search…" oninput="filterTable('gal',this.value)">
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('gal','name')">Name <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m" onclick="sortTable('gal','denom')">Denomination <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m" onclick="sortTable('gal','church')">Church <span class="sort-arrow">⇅</span></th>
+            <th onclick="sortTable('gal','lastDate')">Last Contact <span class="sort-arrow">⇅</span></th>
+            <th class="hide-m">Comm. Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-gal">
+          <tr><td colspan="6"><div class="empty-state"><p>No bishop contacts yet.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SIDE PANEL -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanel()"></div>
+<aside class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <div>
+      <h3 id="panel-name">Contact</h3>
+      <div class="sub" id="panel-sub"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-meta" id="panel-meta"></div>
+    <div class="panel-update-section">
+      <h4>Log Contact &amp; Update</h4>
+      <div class="panel-form-row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="panel-update-date">
+        </div>
+        <div>
+          <label>Communication Type</label>
+          <select id="panel-update-mode">
+            <option value="Text">Text</option>
+            <option value="Call">Call</option>
+            <option value="F2F">F2F</option>
+          </select>
+        </div>
+      </div>
+      <textarea id="panel-note" placeholder="Notes from this interaction…"></textarea>
+      <button class="btn-save" onclick="saveUpdate()">Save Update</button>
+    </div>
+    <div class="notes-section">
+      <h4>Contact History</h4>
+      <div id="notes-list"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- CHURCH MODAL -->
+<div class="modal-overlay" id="church-modal">
+  <div class="modal">
+    <h3>Add Church</h3>
+    <p>Enter the name of the new church location.</p>
+    <input type="text" id="new-church-name" placeholder="e.g. NY Brooklyn">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeChurchModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmAddChurch()">Add Church</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE ═══
+let state = {
+  flock:[], isi:[], gal:[],
+  churchCats:['GY Amsterdam','FL Dublin']
+};
+let currentPanel = null;
+let currentSearches = {flock:'',isi:'',gal:''};
+let sortState = {flock:{col:'name',asc:true}, isi:{col:'name',asc:true}, gal:{col:'name',asc:true}};
+
+// ═══ DATE HEADER ═══
+function setHeaderDate() {
+  const d = new Date();
+  const opts = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('header-date').textContent = d.toLocaleDateString('en-GB', opts);
+}
+
+// ═══ PERSIST ═══
+function save() { try { localStorage.setItem('telepastoring_crm', JSON.stringify(state)); } catch(e){} }
+function load() { try { const d=localStorage.getItem('telepastoring_crm'); if(d) state=JSON.parse(d); } catch(e){} }
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'telepastoring_crm_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const imp = JSON.parse(ev.target.result);
+      ['flock','isi','gal'].forEach(tab => {
+        if (!imp[tab]) return;
+        const existing = new Set(state[tab].map(c=>c.id));
+        imp[tab].forEach(c => {
+          if (!existing.has(c.id)) state[tab].push(c);
+          else {
+            const idx = state[tab].findIndex(x=>x.id===c.id);
+            if (c.lastDate > state[tab][idx].lastDate) state[tab][idx] = c;
+          }
+        });
+      });
+      if (imp.churchCats) state.churchCats = Array.from(new Set([...state.churchCats,...imp.churchCats]));
+      save(); renderAll();
+      alert('Import complete. Data merged successfully.');
+    } catch(err) { alert('Could not read file — ensure it is a valid Telepastoring CRM export.'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ═══ TABS ═══
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══ LEVEL SELECTOR (FLOCK) ═══
+let flockSelectedLevel = '';
+function selectLevel(tab, val, btn) {
+  document.querySelectorAll('#flock-level-grid .level-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById(tab+'-cat').value = val;
+  flockSelectedLevel = val;
+}
+
+// ═══ CHURCH MANAGER ═══
+function updateChurchSelect() {
+  ['flock-church'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = state.churchCats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  });
+}
+
+function removeChurch() {
+  const sel = document.getElementById('flock-church');
+  const val = sel.value;
+  if (state.churchCats.length <= 1) { alert('Must keep at least one church.'); return; }
+  if (!confirm(`Remove "${val}" from church list?`)) return;
+  state.churchCats = state.churchCats.filter(c=>c!==val);
+  save(); updateChurchSelect();
+}
+
+function openChurchModal() {
+  document.getElementById('church-modal').classList.add('open');
+  document.getElementById('new-church-name').value='';
+  setTimeout(()=>document.getElementById('new-church-name').focus(),100);
+}
+function closeChurchModal() { document.getElementById('church-modal').classList.remove('open'); }
+function confirmAddChurch() {
+  const name = document.getElementById('new-church-name').value.trim();
+  if (!name) return;
+  if (!state.churchCats.includes(name)) { state.churchCats.push(name); save(); updateChurchSelect(); }
+  closeChurchModal();
+}
+
+// ═══ ADD CONTACT ═══
+function addContact(tab) {
+  const name = document.getElementById(tab+'-name').value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  const today = new Date().toISOString().slice(0,10);
+  let c = {
+    id: Date.now().toString(),
+    name,
+    lastDate: document.getElementById(tab+'-date').value || today,
+    mode: document.getElementById(tab+'-mode').value || '',
+    notes:[]
+  };
+  if (tab==='flock') {
+    c.cat = document.getElementById('flock-cat').value;
+    c.church = document.getElementById('flock-church').value;
+  }
+  if (tab==='isi') {
+    c.title = document.getElementById('isi-title').value;
+    c.church = document.getElementById('isi-church').value.trim();
+    c.denom = document.getElementById('isi-denom').value;
+  }
+  if (tab==='gal') {
+    c.title = document.getElementById('gal-title').value;
+    c.church = document.getElementById('gal-church').value.trim();
+    c.denom = document.getElementById('gal-denom').value;
+  }
+  state[tab].push(c);
+  save(); renderTable(tab); renderAlerts(tab);
+  // reset
+  document.getElementById(tab+'-name').value='';
+  document.getElementById(tab+'-date').value='';
+  document.getElementById(tab+'-mode').value='';
+  if (tab==='flock') {
+    document.getElementById('flock-cat').value='';
+    flockSelectedLevel='';
+  }
+  if (tab==='isi') { document.getElementById('isi-title').value=''; document.getElementById('isi-church').value=''; document.getElementById('isi-denom').value=''; }
+  if (tab==='gal') { document.getElementById('gal-title').value=''; document.getElementById('gal-church').value=''; document.getElementById('gal-denom').value=''; }
+}
+
+// ═══ HELPERS ═══
+function daysSince(dateStr) {
+  if (!dateStr) return 9999;
+  return Math.floor((new Date()-new Date(dateStr))/86400000);
+}
+function modeBadge(mode) {
+  if (!mode) return '';
+  const cls = mode==='Text'?'badge-text':mode==='Call'?'badge-call':'badge-f2f';
+  return `<span class="badge ${cls}">${mode}</span>`;
+}
+function catBadge(cat) {
+  const map = {
+    'sheep':['badge-l1','L1 — Sheep'],
+    'friend':['badge-l2','L2 — Friend'],
+    'church-core':['badge-l3','L3 — Church Core'],
+    'church-leader':['badge-l4','L4 — Church Leader']
+  };
+  if (!cat || !map[cat]) return '';
+  return `<span class="badge ${map[cat][0]}">${map[cat][1]}</span>`;
+}
+function displayName(c) {
+  return c.title ? `${c.title} ${c.name}` : c.name;
+}
+
+// ═══ SORT ═══
+function sortTable(tab, col) {
+  const s = sortState[tab];
+  if (s.col===col) s.asc = !s.asc;
+  else { s.col=col; s.asc=true; }
+  // update arrows
+  document.querySelectorAll(`#tab-${tab} th`).forEach(th=>{
+    th.classList.remove('sorted');
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent='⇅';
+  });
+  const ths = document.querySelectorAll(`#tab-${tab} th`);
+  ths.forEach(th=>{
+    if (th.getAttribute('onclick') && th.getAttribute('onclick').includes(`'${col}'`)) {
+      th.classList.add('sorted');
+      const arrow = th.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = s.asc ? '↑' : '↓';
+    }
+  });
+  renderTable(tab);
+}
+
+function getSortedContacts(tab) {
+  const { col, asc } = sortState[tab];
+  const search = currentSearches[tab].toLowerCase();
+  let contacts = state[tab].filter(c => {
+    if (!search) return true;
+    const full = (c.title?c.title+' ':'')+c.name;
+    return full.toLowerCase().includes(search) ||
+      (c.church||'').toLowerCase().includes(search) ||
+      (c.denom||'').toLowerCase().includes(search);
+  });
+  contacts.sort((a,b)=>{
+    let va = (a[col]||'').toString().toLowerCase();
+    let vb = (b[col]||'').toString().toLowerCase();
+    if (col==='lastDate') { va=a.lastDate||'0000'; vb=b.lastDate||'0000'; }
+    if (va<vb) return asc?-1:1;
+    if (va>vb) return asc?1:-1;
+    return 0;
+  });
+  return contacts;
+}
+
+// ═══ RENDER TABLE ═══
+function renderTable(tab) {
+  const tbody = document.getElementById('tbody-'+tab);
+  const contacts = getSortedContacts(tab);
+  document.getElementById(tab+'-count').textContent = state[tab].length+' Contact'+(state[tab].length!==1?'s':'');
+
+  if (contacts.length===0) {
+    const msgs = {flock:'No contacts found.',isi:'No pastor contacts found.',gal:'No bishop contacts found.'};
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><p>${msgs[tab]}</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = contacts.map(c=>{
+    const days = daysSince(c.lastDate);
+    const overdue = days>7;
+    const pill = overdue?`<span class="overdue-pill">${days}d ago</span>`:'';
+    const dateDisp = c.lastDate||'—';
+    const dn = displayName(c);
+
+    if (tab==='flock') {
+      return `<tr class="${overdue?'overdue':''}" >
+        <td><strong>${dn}</strong>${pill}</td>
+        <td>${catBadge(c.cat)}</td>
+        <td class="hide-m">${c.church||'—'}</td>
+        <td>${dateDisp}</td>
+        <td class="hide-m">${modeBadge(c.mode)}</td>
+        <td>
+          <button class="action-btn" onclick="openPanel('flock','${c.id}')">Notes</button>
+          <button class="action-btn danger" onclick="deleteContact('flock','${c.id}')">Delete</button>
+        </td></tr>`;
+    } else {
+      return `<tr class="${overdue?'overdue':''}">
+        <td><strong>${dn}</strong>${pill}</td>
+        <td class="hide-m">${c.denom||'—'}</td>
+        <td class="hide-m">${c.church||'—'}</td>
+        <td>${dateDisp}</td>
+        <td class="hide-m">${modeBadge(c.mode)}</td>
+        <td>
+          <button class="action-btn" onclick="openPanel('${tab}','${c.id}')">Notes</button>
+          <button class="action-btn danger" onclick="deleteContact('${tab}','${c.id}')">Delete</button>
+        </td></tr>`;
+    }
+  }).join('');
+}
+
+function filterTable(tab,val) { currentSearches[tab]=val; renderTable(tab); }
+
+// ═══ ALERTS ═══
+function renderAlerts(tab) {
+  const overdue = state[tab].filter(c=>daysSince(c.lastDate)>7);
+  const banner = document.getElementById('alert-'+tab);
+  const list = document.getElementById('alert-list-'+tab);
+  if (overdue.length===0) { banner.classList.remove('visible'); return; }
+  banner.classList.add('visible');
+  list.innerHTML = overdue.map(c=>`<li>${displayName(c)} — ${daysSince(c.lastDate)}d ago</li>`).join('');
+}
+
+// ═══ DELETE ═══
+function deleteContact(tab,id) {
+  if (!confirm('Remove this contact?')) return;
+  state[tab]=state[tab].filter(c=>c.id!==id);
+  save(); renderTable(tab); renderAlerts(tab);
+}
+
+// ═══ SIDE PANEL ═══
+function openPanel(tab,id) {
+  const c = state[tab].find(x=>x.id===id); if (!c) return;
+  currentPanel={tab,id};
+  document.getElementById('panel-name').textContent = displayName(c);
+  const labels={flock:'Flock',isi:'ISI — Pro 27:17',gal:'Gal 6:6'};
+  document.getElementById('panel-sub').textContent = labels[tab];
+
+  let meta=`<div class="row"><span>Last Contact</span><span>${c.lastDate||'—'}</span></div>
+    <div class="row"><span>Comm. Type</span><span>${c.mode||'—'}</span></div>`;
+  if (tab==='flock') {
+    meta+=`<div class="row"><span>Category</span><span>${c.cat||'—'}</span></div>
+      <div class="row"><span>Church</span><span>${c.church||'—'}</span></div>`;
+  }
+  if (tab==='isi'||tab==='gal') {
+    meta+=`<div class="row"><span>Denomination</span><span>${c.denom||'—'}</span></div>
+      <div class="row"><span>Church</span><span>${c.church||'—'}</span></div>`;
+  }
+  document.getElementById('panel-meta').innerHTML=meta;
+  document.getElementById('panel-update-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('panel-update-mode').value=c.mode||'Text';
+  document.getElementById('panel-note').value='';
+  renderNotes(c);
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('side-panel').classList.add('open');
+}
+
+function renderNotes(c) {
+  const list=document.getElementById('notes-list');
+  if (!c.notes||c.notes.length===0) { list.innerHTML='<p class="no-notes">No notes yet. Log your first interaction above.</p>'; return; }
+  const sorted=[...c.notes].sort((a,b)=>b.date.localeCompare(a.date));
+  list.innerHTML=sorted.map(n=>`<div class="note-item">
+    <div class="note-date">${n.date}</div>
+    <div class="note-text">${n.text||'<em style="color:var(--text-light)">No notes added</em>'}</div>
+    <div class="note-mode">${modeBadge(n.mode)}</div>
+  </div>`).join('');
+}
+
+function saveUpdate() {
+  if (!currentPanel) return;
+  const {tab,id}=currentPanel;
+  const c=state[tab].find(x=>x.id===id); if (!c) return;
+  const date=document.getElementById('panel-update-date').value;
+  const mode=document.getElementById('panel-update-mode').value;
+  const text=document.getElementById('panel-note').value.trim();
+  if (!date) { alert('Please select a date.'); return; }
+  if (!c.notes) c.notes=[];
+  c.notes.push({date,mode,text});
+  if (!c.lastDate||date>=c.lastDate) { c.lastDate=date; c.mode=mode; }
+  save(); renderNotes(c); renderTable(tab); renderAlerts(tab);
+  // refresh meta
+  let meta=`<div class="row"><span>Last Contact</span><span>${c.lastDate||'—'}</span></div>
+    <div class="row"><span>Comm. Type</span><span>${c.mode||'—'}</span></div>`;
+  if (tab==='flock') meta+=`<div class="row"><span>Category</span><span>${c.cat||'—'}</span></div><div class="row"><span>Church</span><span>${c.church||'—'}</span></div>`;
+  if (tab==='isi'||tab==='gal') meta+=`<div class="row"><span>Denomination</span><span>${c.denom||'—'}</span></div><div class="row"><span>Church</span><span>${c.church||'—'}</span></div>`;
+  document.getElementById('panel-meta').innerHTML=meta;
+  document.getElementById('panel-note').value='';
+  document.getElementById('panel-update-date').value=new Date().toISOString().slice(0,10);
+}
+
+function closePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('side-panel').classList.remove('open');
+  currentPanel=null;
+}
+
+// ═══ INIT ═══
+function renderAll() {
+  ['flock','isi','gal'].forEach(tab=>{ renderTable(tab); renderAlerts(tab); });
+  updateChurchSelect();
+}
+
+setHeaderDate();
+load();
+renderAll();
+</script>
+</body>
+</html>
