@@ -161,7 +161,7 @@ tbody tr.overdue td:first-child{border-left:3px solid var(--red-alert);padding-l
 
 <!-- HEADER -->
 <header class="app-header">
-  <div class="brand"><span class="brand-title">Telepastoring CRM</span><span class="brand-verse">Proverbs 27:23</span></div>
+  <div class="brand"><span class="brand-title">Telepastoring CRM</span><span class="brand-verse">Ekow Mensah</span></div>
   <div class="header-right">
     <div class="header-date" id="header-date"></div>
     <div class="header-actions">
@@ -627,10 +627,10 @@ function modeBadge(mode) {
 }
 function catBadge(cat) {
   const map = {
-    'sheep':['badge-l1','L1 — Sheep'],
-    'friend':['badge-l2','L2 — Friend'],
-    'church-core':['badge-l3','L3 — Church Core'],
-    'church-leader':['badge-l4','L4 — Church Leader']
+    'sheep':['badge-l1','L1'],
+    'friend':['badge-l2','L2'],
+    'church-core':['badge-l3','L3'],
+    'church-leader':['badge-l4','L4']
   };
   if (!cat || !map[cat]) return '';
   return `<span class="badge ${map[cat][0]}">${map[cat][1]}</span>`;
